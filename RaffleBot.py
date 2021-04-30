@@ -5,7 +5,7 @@ import CONFIG
 
 
 class RaffleBot:
-    defaultSleepTime = CONFIG.RB_SLEEP
+    defaultSleepTime = 60 * 5  # 5 minutes
     guildMap = {}
 
 
