@@ -1,11 +1,11 @@
 import discord
 import asyncio
 import random
-import config
+import CONFIG
 
 
 class RaffleBot:
-    defaultSleepTime = config.RB_SLEEP
+    defaultSleepTime = CONFIG.RB_SLEEP
     guildMap = {}
 
 
@@ -27,47 +27,50 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    hasPermission = message.channel.permissions_for(message.author).manage_roles
-    guildKey = message.guild.id
-    if guildKey not in RaffleBot.guildMap:
-        RaffleBot.guildMap[str(guildKey)] = None
+    has_permission = message.channel.permissions_for(message.author).manage_roles
+    guild_key = message.guild.id
+    if guild_key not in RaffleBot.guildMap:
+        RaffleBot.guildMap[str(guild_key)] = None
 
     if message.content.startswith('!rafflehelp'):
-        await message.channel.send('**RaffleBot** can raffle off anything to people who react to its message\n'
-                                   'Get/Set the role assignment, use "None" to blank it: _!rafflerole <optional set role name>_\n'
-                                   'Commence a raffle, only does role assignment if you have those permissions: _!raffle <character name> <optional countdown time in seconds>_'
+        await message.channel.send('I can raffle off anything to people who react to its message\n'
+                                   'Get/Set the role assignment, use "None" to blank it: _!rafflerole <optional set '
+                                   'role name>_\n'
+                                   'Commence a raffle, only does role assignment if you have those permissions: '
+                                   '_!raffle <character name> <optional countdown time in seconds>_ '
                                    )
 
     elif message.content.startswith('!rafflerole'):
         args = message.content.split(' ', 1)
 
         if len(args) < 2:
+            role_id = RaffleBot.guildMap[str(guild_key)]
             await message.channel.send('RaffleBot role assignment currently ' + (
-                'None' if RaffleBot.guildMap[str(guildKey)] is None else message.guild.get_role(RaffleBot.guildMap[str(guildKey)]).name))
+                'None' if role_id is None else message.guild.get_role(role_id).name))
             return
 
-        if not hasPermission:
+        if not has_permission:
             await message.channel.send(
                 'RaffleBot role assignment cannot be changed by someone without manage_roles permissions')
             return
 
-        newRole = args[1].lower()
-        if newRole == 'none':
+        new_role = args[1].lower()
+        if new_role == 'none':
             await message.channel.send('RaffleBot role assignment changed to None')
             return
 
         for x in message.guild.roles:
-            if x.name.lower() == newRole:
-                RaffleBot.guildMap[str(guildKey)] = x.id
+            if x.name.lower() == new_role:
+                RaffleBot.guildMap[str(guild_key)] = x.id
                 await message.channel.send(
-                    'RaffleBot role assignment changed to ' + message.guild.get_role(RaffleBot.guildMap[str(guildKey)]).name)
+                    'RaffleBot role assignment changed to ' + message.guild.get_role(x.id).name)
                 return
 
         await message.channel.send('RaffleBot could not find role named ' + args[1])
 
     elif message.content.startswith('!raffle'):
         args = message.content.split()
-        sleepTime = RaffleBot.defaultSleepTime
+        sleep_time = RaffleBot.defaultSleepTime
 
         if len(args) < 2:
             await message.channel.send(
@@ -75,39 +78,39 @@ async def on_message(message):
             return
 
         if (len(args) > 2) and (args[2].isnumeric()):
-            sleepTime = int(args[2])
+            sleep_time = int(args[2])
 
-        raffleMsg = await message.channel.send('Raffling off ' + args[1])
-        await raffleMsg.add_reaction('✅')
-        await asyncio.sleep(sleepTime)
+        raffle_msg = await message.channel.send('Raffling off ' + args[1])
+        await raffle_msg.add_reaction('✅')
+        await asyncio.sleep(sleep_time)
 
-        raffleMsg = await raffleMsg.channel.fetch_message(raffleMsg.id)
-        raffleRea = raffleMsg.reactions[0]
-        await raffleRea.remove(client.user)
-        raffleUsr = raffleRea.users()
+        raffle_msg = await raffle_msg.channel.fetch_message(raffle_msg.id)
+        raffle_rea = raffle_msg.reactions[0]
+        await raffle_rea.remove(client.user)
+        raffle_usr = raffle_rea.users()
 
-        characterRole = (
-            None if (RaffleBot.guildMap[str(guildKey)] == None) or (not hasPermission) else raffleMsg.guild.get_role(RaffleBot.guildMap[str(guildKey)]))
+        role_id = RaffleBot.guildMap[str(guild_key)]
+        character_role = (None if (role_id is None) or (not has_permission) else raffle_msg.guild.get_role(role_id))
 
-        raffleUsrRand = await raffleUsr.flatten()
-        random.shuffle(raffleUsrRand)
+        raffle_usr_rand = await raffle_usr.flatten()
+        random.shuffle(raffle_usr_rand)
 
-        raffleWin = None
-        for x in raffleUsrRand:
-            raffleWin = raffleMsg.guild.get_member(x.id)
-            if raffleWin != None:
-                if (characterRole != None) and (characterRole in raffleWin.roles):
-                    raffleWin = None
+        raffle_win = None
+        for x in raffle_usr_rand:
+            raffle_win = raffle_msg.guild.get_member(x.id)
+            if raffle_win is not None:
+                if (character_role is not None) and (character_role in raffle_win.roles):
+                    raffle_win = None
                 else:
                     break
 
-        if raffleWin == None:
+        if raffle_win is None:
             await message.channel.send('No valid members for ' + args[1])
             return
 
-        if (characterRole != None):
-            await raffleWin.add_roles(characterRole)
-        await message.channel.send("<@" + str(raffleWin.id) + "> won the raffle for " + args[1])
+        if character_role is not None:
+            await raffle_win.add_roles(character_role)
+        await message.channel.send("<@" + str(raffle_win.id) + "> won the raffle for " + args[1])
 
 
-client.run(config.RB_TOKEN)
+client.run(CONFIG.RB_TOKEN)
