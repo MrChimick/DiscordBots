@@ -3,7 +3,7 @@ import asyncio
 import random
 import CONFIG
 
-
+# contains effectively static members, that can be referenced and changed
 class RaffleBot:
     defaultSleepTime = 60 * 5  # 5 minutes
     guildMap = {}
