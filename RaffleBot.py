@@ -3,6 +3,7 @@ import asyncio
 import random
 import CONFIG
 
+
 # contains effectively static members, that can be referenced and changed
 class RaffleBot:
     defaultSleepTime = 60 * 5  # 5 minutes
@@ -42,7 +43,7 @@ async def on_message(message):
                                    'Get/Set the role assignment, use "None" to blank it: _!rafflerole <optional set '
                                    'role name>_\n'
                                    'Commence a raffle, only does role assignment if you have those permissions: '
-                                   '_!raffle <character name> <optional countdown time in seconds>_ '
+                                   '_!raffle <prize name> <optional countdown time in seconds>_ '
                                    )
 
     # get or set the role assigned for the current guild
@@ -87,7 +88,7 @@ async def on_message(message):
         # requires a message that indicates the thing being raffled, with optional duration
         if len(args) < 2:
             await message.channel.send(
-                'Syntax for raffle is _!raffle <character name> <optional countdown time in seconds>_')
+                'Syntax for raffle is _!raffle <prize name> <optional countdown time in seconds>_')
             return
 
         # parses for duration parameter
@@ -134,4 +135,4 @@ async def on_message(message):
         await message.channel.send("<@" + str(raffle_win.id) + "> won the raffle for " + args[1])
 
 
-client.run(CONFIG.RB_TOKEN)
+client.run(CONFIG.RB_DISCORD_TOKEN)
